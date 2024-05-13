@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:new_not_sepeti/models/kategori.dart';
-import 'package:new_not_sepeti/models/not.dart';
+import 'package:new_not_sepeti/models/notlar.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
@@ -19,6 +19,7 @@ class DatabaseHelper {
       return _databaseHelper!;
     }
   }
+
   DatabaseHelper._internal();
 
   Future<Database> _getDatabase() async {
@@ -60,18 +61,19 @@ class DatabaseHelper {
     return await openDatabase(path, readOnly: false);
   }
 
-  //////////////KATEGORİ İŞLEMLERİ /////////////////
-  Future<List<Kategori>> kategorilerinListesiniGetir() async {
-    var kategorileriIcerenMapListesi = await kategorileriGetir();
+  ////////KATEGORİ İŞLEMLERİ//////////////////
+  ///
+  Future<List<Kategori>> kategoriListesiniGetir() async {
+    var kategorileriIcerenMap = await kategorileriGetir();
     var kategoriListesi = <Kategori>[];
 
-    for (Map<String, dynamic> map in kategorileriIcerenMapListesi) {
+    for (Map<String, dynamic> map in kategorileriIcerenMap) {
       kategoriListesi.add(Kategori.fromMap(map));
     }
     return kategoriListesi;
   }
 
-  Future<List<Map<String, Object?>>> kategorileriGetir() async {
+  Future<List<Map<String, dynamic>>> kategorileriGetir() async {
     var db = await _getDatabase();
     var sonuc = await db.query('kategori');
     return sonuc;
@@ -97,26 +99,26 @@ class DatabaseHelper {
     return sonuc;
   }
 
-  ////////////NOT İŞLEMLERİ /////////////////
-  Future<List<Not>> notListesiniGetir() async {
-    var notlariIcerenMapLisetsi = await notGetir();
-    var notListesi = <Not>[];
-
-    for (Map<String, dynamic> map in notlariIcerenMapLisetsi) {
-      notListesi.add(Not.fromMap(map));
+  ///////////////NOTLARIN İŞLEMLERİ//////////////////////////////
+  ///
+  Future<List<Notlar>> notListesiniGetir() async {
+    var notlariIcerenMap = await notlariGetir();
+    var notListesi = <Notlar>[];
+    for (Map<String, dynamic> map in notlariIcerenMap) {
+      notListesi.add(Notlar.fromMap(map));
     }
     return notListesi;
   }
 
-  Future<List<Map<String, dynamic>>> notGetir() async {
+  Future<List<Map<String, dynamic>>> notlariGetir() async {
     var db = await _getDatabase();
     var sonuc = await db.query('notlar');
     return sonuc;
   }
 
-  Future<int> notEkle(Not not) async {
+  Future<int> notEkle(Notlar not) async {
     var db = await _getDatabase();
-    var sonuc = db.insert('notlar', not.toMap());
+    var sonuc = await db.insert('notlar', not.toMap());
     return sonuc;
   }
 
@@ -127,7 +129,7 @@ class DatabaseHelper {
     return sonuc;
   }
 
-  Future<int> notGuncelle(Not not) async {
+  Future<int> notGuncelle(Notlar not) async {
     var db = await _getDatabase();
     var sonuc = await db.update('notlar', not.toMap(),
         where: 'notID = ?', whereArgs: [not.notID]);

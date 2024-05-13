@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:new_not_sepeti/models/kategori.dart';
 import 'package:new_not_sepeti/utils/database_helper.dart';
-import 'package:new_not_sepeti/widgets/drawer.dart';
-import 'package:new_not_sepeti/widgets/not_ekle_detay.dart';
+import 'package:new_not_sepeti/widgets/custom_drawer.dart';
+import 'package:path/path.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,65 +26,62 @@ class MyApp extends StatelessWidget {
 }
 
 class NotSepeti extends StatelessWidget {
-  DatabaseHelper databaseHelper = DatabaseHelper();
+  NotSepeti({super.key});
+  final _databaseHelper = DatabaseHelper();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const CustomDrawer(),
+      drawer: CustomDrawer(),
       appBar: AppBar(
-        centerTitle: true,
         title: const Text('Not Sepeti'),
+        centerTitle: true,
+        elevation: 4,
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  _kategoriEkleDialog(context);
-                },
-                child: const Text('Kategori Ekle'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => NotEkleDetay(),
-                    ),
-                  );
-                },
-                child: const Text('Not Ekle'),
-              ),
-            ],
-          ),
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ButtonBar(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    _kategoriEkle(context);
+                  },
+                  child: Text('Kategori Ekle'),
+                ),
+                ElevatedButton(
+                  onPressed: () {},
+                  child: Text('Not Ekle'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void _kategoriEkleDialog(BuildContext context) {
-    String? yeniEklenecekKategoriAdi;
+  void _kategoriEkle(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
+    String? eklenecekKategoriAdi;
     showDialog(
-      barrierDismissible: false,
+      barrierDismissible: true,
       context: context,
       builder: (context) {
         return SimpleDialog(
-          title: const Text('Kategori Ekle'),
+          title: Text('Kategori Ekle'),
           children: [
-            Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
+            Padding(
+              padding: EdgeInsets.all(12),
+              child: Form(
+                key: _formKey,
                 child: TextFormField(
                   onSaved: (newValue) {
-                    yeniEklenecekKategoriAdi = newValue;
+                    eklenecekKategoriAdi = newValue!;
                   },
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: 'Kategori Adı',
+                      hintText: 'Kategori Adı Giriniz',
                       labelText: 'Kategori Adı'),
                 ),
               ),
@@ -96,24 +92,18 @@ class NotSepeti extends StatelessWidget {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  style: TextButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white),
-                  child: const Text('Sil'),
+                  child: Text('Sil'),
                 ),
                 TextButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
-                      databaseHelper
-                          .kategoriEkle(Kategori(yeniEklenecekKategoriAdi))
-                          .then((value) => Navigator.of(context).pop());
+                      _databaseHelper
+                          .kategoriEkle(Kategori(eklenecekKategoriAdi));
+                      Navigator.of(context).pop();
                     }
                   },
-                  style: TextButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white),
-                  child: const Text('Kaydet'),
+                  child: Text('Kaydet'),
                 ),
               ],
             ),

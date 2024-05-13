@@ -10,65 +10,53 @@ class Kategoriler extends StatefulWidget {
 }
 
 class _KategorilerState extends State<Kategoriler> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final _databaseHelper = DatabaseHelper();
   List<Kategori> tumKategoriler = <Kategori>[];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
         title: const Text('Kategoriler'),
+        centerTitle: true,
       ),
       body: FutureBuilder(
-        future: _databaseHelper.kategorilerinListesiniGetir(),
+        future: _databaseHelper.kategoriListesiniGetir(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             tumKategoriler = snapshot.data!;
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: tumKategoriler.length,
-                    itemBuilder: (context, index) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.black.withOpacity(0.2),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: ListTile(
-                          leading: const Icon(Icons.category),
-                          title: Text(tumKategoriler[index].kategoriBaslik!),
-                          trailing: SizedBox(
-                            width: MediaQuery.of(context).size.width / 2.7,
-                            child: Row(
-                              children: [
-                                TextButton(
-                                  onPressed: () {
-                                    _databaseHelper
-                                        .kategoriSil(
-                                            tumKategoriler[index].kategoriID!)
-                                        .then((value) => setState(() {}));
-                                  },
-                                  child: const Text('Sil'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    _kategoriGuncelle(tumKategoriler[index]);
-                                  },
-                                  child: const Text('Güncelle'),
-                                ),
-                              ],
+            return ListView.builder(
+              itemCount: tumKategoriler.length,
+              itemBuilder: (context, index) {
+                var ezTumKategoriler = tumKategoriler[index];
+                return ListTile(
+                  leading: const Icon(Icons.category),
+                  title: Text(ezTumKategoriler.kategoriBaslik!),
+                  trailing: SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width / 2.4,
+                    child: Row(
+                      children: [
+                        ButtonBar(
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                kategoriSil(tumKategoriler[index].kategoriID!);
+                              },
+                              child: const Text('Sil'),
                             ),
-                          ),
+                            TextButton(
+                              onPressed: () {
+                                _kategoriyiGuncelle(tumKategoriler[index]);
+                              },
+                              child: const Text('Güncelle'),
+                            ),
+                          ],
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                );
+              },
             );
           } else {
             return const Center(
@@ -80,32 +68,73 @@ class _KategorilerState extends State<Kategoriler> {
     );
   }
 
-  void _kategoriGuncelle(Kategori kategoriGuncelle) {
-    _kategoriGuncelleDialog(context, kategoriGuncelle);
+  kategoriSil(int kategoriID) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+              'Seçilen Kategoriyi Silmek İstediğinize emin misiniz?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      _databaseHelper.kategoriSil(kategoriID).then((value) {
+                        if (value != 0) {
+                          setState(() {
+                            _databaseHelper.kategoriListesiniGetir();
+                            Navigator.of(context).pop();
+                          });
+                        }
+                      });
+                    },
+                    child: const Text('Sil'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Vazgeç'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  void _kategoriGuncelleDialog(
-      BuildContext context, Kategori kategoriGuncelle) {
-    String? yeniEklenecekKategoriAdi;
+  _kategoriyiGuncelle(Kategori guncellenecekKategori) {
+    _kategoriGuncelle(guncellenecekKategori);
+  }
+
+  void _kategoriGuncelle(Kategori guncellenecekKategori) {
     final formKey = GlobalKey<FormState>();
+    String? guncellenecekKategoriAdi;
     showDialog(
-      barrierDismissible: false,
+      barrierDismissible: true,
       context: context,
       builder: (context) {
         return SimpleDialog(
-          title: const Text('Kategori Ekle'),
+          title: const Text('Kategori Güncelle'),
           children: [
-            Form(
-              key: formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Form(
+                key: formKey,
                 child: TextFormField(
+                  initialValue: guncellenecekKategori.kategoriBaslik,
                   onSaved: (newValue) {
-                    yeniEklenecekKategoriAdi = newValue;
+                    guncellenecekKategoriAdi = newValue!;
                   },
                   decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: 'Kategori Adı',
+                      hintText: 'Kategori Adı Giriniz',
                       labelText: 'Kategori Adı'),
                 ),
               ),
@@ -116,9 +145,6 @@ class _KategorilerState extends State<Kategoriler> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  style: TextButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white),
                   child: const Text('Sil'),
                 ),
                 TextButton(
@@ -127,15 +153,12 @@ class _KategorilerState extends State<Kategoriler> {
                       formKey.currentState!.save();
                       _databaseHelper
                           .kategoriGuncelle(Kategori.withID(
-                              yeniEklenecekKategoriAdi,
-                              kategoriGuncelle.kategoriID))
+                              guncellenecekKategori.kategoriID,
+                              guncellenecekKategoriAdi))
                           .then((value) => setState(() {}));
+                      Navigator.of(context).pop();
                     }
-                    Navigator.of(context).pop();
                   },
-                  style: TextButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white),
                   child: const Text('Kaydet'),
                 ),
               ],
