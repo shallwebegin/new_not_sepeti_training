@@ -1,20 +1,20 @@
-class Notlar {
+class Not {
   int? notID;
   int? kategoriID;
+  String? kategoriBaslik;
   String? notBaslik;
   String? notIcerik;
   String? notTarih;
   int? notOncelik;
 
-  Notlar(this.kategoriID, this.notBaslik, this.notIcerik, this.notOncelik,
-      this.notTarih);
+  Not(this.kategoriID, this.notBaslik, this.notIcerik, this.notTarih,
+      this.notOncelik); //verileri yazarken
 
-  Notlar.withID(this.kategoriID, this.notBaslik, this.notID, this.notIcerik,
-      this.notOncelik, this.notTarih);
+  Not.withID(this.notID, this.kategoriID, this.notBaslik, this.notIcerik,
+      this.notTarih, this.notOncelik); //verileri okurken
 
   Map<String, dynamic> toMap() {
-    var map = <String, dynamic>{};
-
+    var map = Map<String, dynamic>();
     map['notID'] = notID;
     map['kategoriID'] = kategoriID;
     map['notBaslik'] = notBaslik;
@@ -25,12 +25,18 @@ class Notlar {
     return map;
   }
 
-  Notlar.fromMap(Map<String, dynamic> map) {
+  Not.fromMap(Map<String, dynamic> map) {
     this.notID = map['notID'];
     this.kategoriID = map['kategoriID'];
+    this.kategoriBaslik = map['kategoriBaslik'];
     this.notBaslik = map['notBaslik'];
     this.notIcerik = map['notIcerik'];
     this.notTarih = map['notTarih'];
     this.notOncelik = map['notOncelik'];
+  }
+
+  @override
+  String toString() {
+    return 'Not{notID: $notID, kategoriID: $kategoriID, notBaslik: $notBaslik, notIcerik: $notIcerik, notTarih: $notTarih, notOncelik: $notOncelik}';
   }
 }

@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:new_not_sepeti/models/kategori.dart';
-import 'package:new_not_sepeti/models/notlar.dart';
+import 'package:new_not_sepeti/models/not.dart';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
@@ -19,7 +20,6 @@ class DatabaseHelper {
       return _databaseHelper!;
     }
   }
-
   DatabaseHelper._internal();
 
   Future<Database> _getDatabase() async {
@@ -61,21 +61,62 @@ class DatabaseHelper {
     return await openDatabase(path, readOnly: false);
   }
 
-  ////////KATEGORİ İŞLEMLERİ//////////////////
-  ///
-  Future<List<Kategori>> kategoriListesiniGetir() async {
-    var kategorileriIcerenMap = await kategorileriGetir();
-    var kategoriListesi = <Kategori>[];
+  /////////////NOT İŞLEMLERİ////////////////////////
+  Future<List<Not>> notlarinListesiniGetir() async {
+    var notlariIcerenMap = await notlariGetir();
+    var notListesi = <Not>[];
+    for (Map<String, dynamic> map in notlariIcerenMap) {
+      notListesi.add(Not.fromMap(map));
+    }
+    return notListesi;
+  }
 
-    for (Map<String, dynamic> map in kategorileriIcerenMap) {
+  Future<List<Map<String, dynamic>>> notlariGetir() async {
+    var db = await _getDatabase();
+    var sonuc = await db.rawQuery(
+        'select * from "not" inner join kategori on kategori.kategoriID = "not".kategoriID order by notID Desc;');
+    return sonuc;
+  }
+
+  Future<int> notEkle(Not not) async {
+    var db = await _getDatabase();
+    var sonuc = await db.insert('not', not.toMap());
+    return sonuc;
+  }
+
+  Future<int> notSil(int notID) async {
+    var db = await _getDatabase();
+    var sonuc = await db.delete('not', where: 'notID = ?', whereArgs: [notID]);
+    return sonuc;
+  }
+
+  Future<int> notGuncelle(Not not) async {
+    var db = await _getDatabase();
+    var sonuc = await db
+        .update('not', not.toMap(), where: 'notID = ?', whereArgs: [not.notID]);
+    return sonuc;
+  }
+
+  ///////////////KATEGORİ İŞLEMLERİ////////////////////////
+  Future<List<Map<String, dynamic>>> kategoriGetir() async {
+    var db = await _getDatabase();
+    var sonuc = db.query('kategori');
+    return sonuc;
+  }
+
+  Future<List<Kategori>> kategoriListesiniGetir() async {
+    var kategoriIcerenMap = await kategoriGetir();
+    var kategoriListesi = <Kategori>[];
+    for (Map<String, dynamic> map in kategoriIcerenMap) {
       kategoriListesi.add(Kategori.fromMap(map));
     }
     return kategoriListesi;
   }
 
-  Future<List<Map<String, dynamic>>> kategorileriGetir() async {
+  Future<int> kategoriSil(int kategoriID) async {
     var db = await _getDatabase();
-    var sonuc = await db.query('kategori');
+    var sonuc = await db
+        .delete('kategori', where: 'kategoriID = ? ', whereArgs: [kategoriID]);
     return sonuc;
   }
 
@@ -85,54 +126,10 @@ class DatabaseHelper {
     return sonuc;
   }
 
-  Future<int> kategoriSil(int kategoriID) async {
-    var db = await _getDatabase();
-    var sonuc = await db
-        .delete('kategori', where: 'kategoriID = ?', whereArgs: [kategoriID]);
-    return sonuc;
-  }
-
   Future<int> kategoriGuncelle(Kategori kategori) async {
     var db = await _getDatabase();
     var sonuc = await db.update('kategori', kategori.toMap(),
         where: 'kategoriID = ?', whereArgs: [kategori.kategoriID]);
-    return sonuc;
-  }
-
-  ///////////////NOTLARIN İŞLEMLERİ//////////////////////////////
-  ///
-  Future<List<Notlar>> notListesiniGetir() async {
-    var notlariIcerenMap = await notlariGetir();
-    var notListesi = <Notlar>[];
-    for (Map<String, dynamic> map in notlariIcerenMap) {
-      notListesi.add(Notlar.fromMap(map));
-    }
-    return notListesi;
-  }
-
-  Future<List<Map<String, dynamic>>> notlariGetir() async {
-    var db = await _getDatabase();
-    var sonuc = await db.query('notlar');
-    return sonuc;
-  }
-
-  Future<int> notEkle(Notlar not) async {
-    var db = await _getDatabase();
-    var sonuc = await db.insert('notlar', not.toMap());
-    return sonuc;
-  }
-
-  Future<int> notSil(int notID) async {
-    var db = await _getDatabase();
-    var sonuc =
-        await db.delete('notlar', where: 'notID = ?', whereArgs: [notID]);
-    return sonuc;
-  }
-
-  Future<int> notGuncelle(Notlar not) async {
-    var db = await _getDatabase();
-    var sonuc = await db.update('notlar', not.toMap(),
-        where: 'notID = ?', whereArgs: [not.notID]);
     return sonuc;
   }
 }
